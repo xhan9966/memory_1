@@ -30,6 +30,16 @@ header p {
 #new_game, #player, #high_score, #correct {
 	float: left;
 }
+
+#cards {
+    display: flex;
+    flex-direction: column;
+}
+
+#row {
+    display: flex;
+}
+
 #cards img {
     height: 100px;
     width: 80px;
@@ -37,6 +47,35 @@ header p {
     padding-bottom: 3px;
     float: left; 
 }
+
 .clear {
     clear: both;
+}
+
+#tab-nav {
+    display: flex;
+    background-color: rgb(232, 232, 232);
+    padding: 5px 10px;
+    margin-bottom: 20px;
+}
+
+#tab-nav a {
+    display: flex;
+    color: gray;
+    background-color: rgb(246, 246, 246);
+    padding: 6px 15px;
+    margin-right: 5px;
+    border:1px solid lightgray;
+    border-radius: 3px;
+    text-decoration: none;
+}
+
+#tab-nav .selected {
+    color: white;
+    background-color: rgb(71, 126, 251);
+}
+
+#player_name_error {
+    color: red;
+    visibility: hidden;
 }
