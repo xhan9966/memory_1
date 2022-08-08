@@ -103,6 +103,7 @@ const loadCardsUI = () => {
       const imageElement = $(`<img/>`);
       imageElement.attr({
         src: backImage,
+        id: j,
         alt: "",
       });
       const aElement = $(`<a class="card-image" href="#"></a>`);
@@ -110,27 +111,38 @@ const loadCardsUI = () => {
         id: cards[j],
       });
       aElement.append(imageElement);
-      aElement.click((e) => {
+      imageElement.click((e) => {
+        var displayCount = 0;
+        $(".card-image").each((index, element) => {
+          if (
+            $(element).children("img").attr("src") !== blankImage &&
+            $(element).children("img").attr("src") !== backImage
+          ) {
+            displayCount += 1;
+          }
+        });
+
+        if (displayCount >= 3) {
+          return;
+        }
+
         var target = $(e.target);
+        target.css("pointer-events", "none");
         target.fadeOut(500, function () {
           const src = cards[j];
-          // todo
-          console.log(target.children("img:eq(0)"));
-          target.children("img:eq(0)").attr("src", src);
+          target.attr("src", src);
           target.fadeIn(500, function () {
             var lastElement = null;
             $(".card-image").each((index, element) => {
               if (
-                $(element).attr("src") === src &&
-                $(element).attr("id") !== target.attr("id")
+                $(element).children("img").attr("src") === src &&
+                $(element).children("img").attr("id") !== target.attr("id")
               ) {
-                lastElement = $(element);
+                lastElement = $(element).children("img");
               }
             });
             // found
             if (lastElement != null) {
-              target.unbind("click");
-              lastElement.unbind("click");
               setTimeout(function () {
                 target.slideUp(500, function () {
                   target.attr("src", blankImage);
@@ -147,17 +159,19 @@ const loadCardsUI = () => {
                 var tmp = null;
                 $(".card-image").each((index, element) => {
                   if (
-                    $(element).attr("src") === target.attr("src") &&
-                    $(element).attr("id") !== target.attr("id")
+                    $(element).children("img").attr("src") ===
+                      target.attr("src") &&
+                    $(element).children("img").attr("id") != target.attr("id")
                   ) {
                     tmp = $(element);
                   }
                 });
-                console.log(tmp);
                 if (tmp == null) {
                   target.fadeOut(500, function () {
                     target.attr("src", backImage);
-                    target.fadeIn(500, function () {});
+                    target.fadeIn(500, function () {
+                      target.css("pointer-events", "auto");
+                    });
                   });
                 }
               }, 2000);
