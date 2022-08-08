@@ -2,8 +2,11 @@
 
 const backImage = "./images/back.png";
 const blankImage = "./images/blank.png";
+var currentTotal = 0;
+var currentCorrect = 0;
 
 $(document).ready(() => {
+  console.log(1234);
   preload();
 
   showPlayer();
@@ -60,11 +63,15 @@ const resetTabs = () => {
 
 let images = [];
 let cards = [];
-let number = 8;
+let number = 48;
 const numInRow = 8;
 
 const setupData = () => {
-  number = 8;
+  images = [];
+  cards = [];
+  currentTotal = 0;
+  currentCorrect = 0;
+
   const allImages = [];
   for (let i = 0; i < 24; i++) {
     let image = "card_" + (i + 1) + ".png";
@@ -99,16 +106,16 @@ const loadCardsUI = () => {
   let rowNum = parseInt(number / numInRow);
   for (let i = 0; i < rowNum; i++) {
     const rowElement = $(`<div class="row"></div>`);
-    for (let j = 0; j < cards.length; j++) {
+    for (let j = 0; j < numInRow; j++) {
       const imageElement = $(`<img/>`);
       imageElement.attr({
         src: backImage,
-        id: j,
+        id: i * numInRow + j,
         alt: "",
       });
       const aElement = $(`<a class="card-image" href="#"></a>`);
       aElement.attr({
-        id: cards[j],
+        id: cards[i * numInRow + j],
       });
       aElement.append(imageElement);
       imageElement.click((e) => {
@@ -129,7 +136,7 @@ const loadCardsUI = () => {
         var target = $(e.target);
         target.css("pointer-events", "none");
         target.fadeOut(500, function () {
-          const src = cards[j];
+          const src = cards[i * numInRow + j];
           target.attr("src", src);
           target.fadeIn(500, function () {
             var lastElement = null;
@@ -141,8 +148,10 @@ const loadCardsUI = () => {
                 lastElement = $(element).children("img");
               }
             });
+
             // found
             if (lastElement != null) {
+              currentCorrect += 1;
               setTimeout(function () {
                 target.slideUp(500, function () {
                   target.attr("src", blankImage);
@@ -176,6 +185,33 @@ const loadCardsUI = () => {
                 }
               }, 2000);
             }
+
+            // caculate the correct
+            currentTotal += 1;
+            const correctValue =
+              ((currentCorrect * 1.0) / (currentTotal / 2)) * 100;
+            $("#correct").text("Correct: " + correctValue.toFixed(0) + "%");
+
+            // all done?
+            const allDone = currentCorrect == cards.length / 2;
+            console.log(currentCorrect);
+            if (allDone && correctValue >= 0) {
+              let players = JSON.parse(sessionStorage.getItem("players"));
+              if (
+                players != undefined &&
+                (players != null) & (players.length > 0)
+              ) {
+                let lastOne = players[players.length - 1];
+                let lastHighScore = parseInt(lastOne.highScore[number]);
+                if (isNaN(lastHighScore) || lastHighScore < correctValue) {
+                  lastOne.highScore[number] = correctValue;
+                  $("#high_score").text(
+                    "High Score: " + correctValue.toFixed(0) + "%"
+                  );
+                }
+              }
+              sessionStorage.setItem("players", JSON.stringify(players));
+            }
           });
         });
       });
@@ -194,13 +230,13 @@ const showPlayer = () => {
     let lastOne = players[players.length - 1];
     name = "Player: " + lastOne.name;
     number = lastOne.number;
-    let highScoreValue = parseInt(lastOne.highScore);
+    let highScoreValue = parseInt(lastOne.highScore[number]);
     if (!isNaN(highScoreValue) && highScoreValue >= 0) {
-      highScore = "High Score: " + highScoreValue;
+      highScore = "High Score: " + highScoreValue + "%";
     }
     let correctValue = parseInt(lastOne.correct);
     if (!isNaN(correctValue) && correctValue >= 0) {
-      correct = "Correct: " + correctValue;
+      correct = "Correct: " + correctValue + "%";
     }
   }
   $("#player").text(name);
@@ -219,14 +255,17 @@ const savePlayer = () => {
   let option = $("#num_cards option:selected"); // get selected option
   let number = parseInt(option.text());
 
-  let player = { name: name, number: number, highScore: -1, correct: -1 };
+  let player = { name: name, number: number, correct: -1, highScore: {} };
 
   let players = JSON.parse(sessionStorage.getItem("players"));
   const data = [];
-  if (players != undefined && (players != null) & (players.length > 0)) {
+  if (players != undefined && players != null && players.length > 0) {
     players.forEach((element) => {
       if (element.name !== name) {
         data.push(element);
+      } else {
+        player.correct = element.correct;
+        player.highScore = element.highScore;
       }
     });
   }
@@ -235,5 +274,5 @@ const savePlayer = () => {
 
   sessionStorage.setItem("players", JSON.stringify(data));
 
-  location.reload();
+  $(location).attr("href", "index.html");
 };
