@@ -6,7 +6,6 @@ var currentTotal = 0;
 var currentCorrect = 0;
 
 $(document).ready(() => {
-  console.log(1234);
   preload();
 
   showPlayer();
@@ -18,9 +17,10 @@ $(document).ready(() => {
   resetTabs();
 
   $("#tab-nav a").click((e) => {
-    // reset
-    resetTabs();
+    e.preventDefault();
 
+    // reset define "click"
+    resetTabs();
     // get clicked <a>
     let a = $(e.target);
     // add class "selected"
@@ -29,17 +29,20 @@ $(document).ready(() => {
     let id = a.attr("href");
     // get tab div
     let tab = $(id);
-    // modify the attr 'display'
+    // modify the attribute 'display'
     tab.css("display", "block");
   });
 
+  // add click "save" for after
   $("#save_settings").click((e) => {
+    e.preventDefault();
+
     savePlayer();
   });
-
+  // Let the game choose "play game" automatically, start play game, trigger"click"
   $($("#tab-nav a")[0]).trigger("click");
 });
-
+// pre load the images
 const preload = () => {
   let arrayOfImages = ["back.png", "blank.png"];
   for (let i = 0; i < 24; i++) {
@@ -52,7 +55,7 @@ const preload = () => {
     image.attr("src", src);
   });
 };
-
+// Hide tabs
 const resetTabs = () => {
   // remove class "selected"
   $("#tab-nav a").removeClass("selected");
@@ -66,6 +69,8 @@ let cards = [];
 let number = 48;
 const numInRow = 8;
 
+// Use an image array to store the images
+// Use a card array to store the src attributes of the images
 const setupData = () => {
   images = [];
   cards = [];
@@ -103,9 +108,12 @@ const setupData = () => {
 };
 
 const loadCardsUI = () => {
+  //get the row number
   let rowNum = parseInt(number / numInRow);
   for (let i = 0; i < rowNum; i++) {
+    // create a row element
     const rowElement = $(`<div class="row"></div>`);
+    // for each row, add image tags and a tags
     for (let j = 0; j < numInRow; j++) {
       const imageElement = $(`<img/>`);
       imageElement.attr({
@@ -118,7 +126,10 @@ const loadCardsUI = () => {
         id: cards[i * numInRow + j],
       });
       aElement.append(imageElement);
+      // add a click event to the image element
       imageElement.click((e) => {
+        e.preventDefault();
+
         var displayCount = 0;
         $(".card-image").each((index, element) => {
           if (
@@ -135,10 +146,14 @@ const loadCardsUI = () => {
 
         var target = $(e.target);
         target.css("pointer-events", "none");
+        // fadeOut animation
         target.fadeOut(500, function () {
           const src = cards[i * numInRow + j];
+          // change the src
           target.attr("src", src);
+          // fadeIn animation
           target.fadeIn(500, function () {
+            // try to find the element with the same image
             var lastElement = null;
             $(".card-image").each((index, element) => {
               if (
@@ -152,6 +167,7 @@ const loadCardsUI = () => {
             // found
             if (lastElement != null) {
               currentCorrect += 1;
+              // slideUp animation after 1 second
               setTimeout(function () {
                 target.slideUp(500, function () {
                   target.attr("src", blankImage);
@@ -163,6 +179,7 @@ const loadCardsUI = () => {
                 });
               }, 1000);
             } else {
+              // fadeOut/fadeIn animation after 2 seconds
               setTimeout(function () {
                 // fix: For previously displayed images, it is possible that a matching image is displayed at this time
                 var tmp = null;
@@ -194,7 +211,7 @@ const loadCardsUI = () => {
 
             // all done?
             const allDone = currentCorrect == cards.length / 2;
-            console.log(currentCorrect);
+            // console.log(currentCorrect);
             if (allDone && correctValue >= 0) {
               let players = JSON.parse(sessionStorage.getItem("players"));
               if (
@@ -221,10 +238,12 @@ const loadCardsUI = () => {
   }
 };
 
+// show the palyer information.
 const showPlayer = () => {
   var name = " ";
   var highScore = " ";
   var correct = " ";
+  // get palyer data from the sessionStorage
   let players = JSON.parse(sessionStorage.getItem("players"));
   if (players != undefined && (players != null) & (players.length > 0)) {
     let lastOne = players[players.length - 1];
@@ -239,11 +258,14 @@ const showPlayer = () => {
       correct = "Correct: " + correctValue + "%";
     }
   }
+  // update the elements
   $("#player").text(name);
   $("#high_score").text(highScore);
   $("#correct").text(correct);
 };
 
+//Tabs-3 Settings
+//Check if the player name is valid
 const savePlayer = () => {
   $("#player_name_error").css("visibility", "hidden");
   let name = $("#player_name").val();
@@ -251,17 +273,19 @@ const savePlayer = () => {
     $("#player_name_error").css("visibility", "visible");
     return;
   }
-
-  let option = $("#num_cards option:selected"); // get selected option
+  // get selected option
+  let option = $("#num_cards option:selected");
   let number = parseInt(option.text());
 
   let player = { name: name, number: number, correct: -1, highScore: {} };
 
+  //use forEach to compare the player’s previous data from session storage
   let players = JSON.parse(sessionStorage.getItem("players"));
   const data = [];
   if (players != undefined && players != null && players.length > 0) {
     players.forEach((element) => {
       if (element.name !== name) {
+        //use if else to check if it's new player
         data.push(element);
       } else {
         player.correct = element.correct;
@@ -269,10 +293,12 @@ const savePlayer = () => {
       }
     });
   }
-
+  //push the player data into the session storage.
   data.push(player);
 
+  //set and save the new data in session storage
   sessionStorage.setItem("players", JSON.stringify(data));
 
+  //relocation new game pages
   $(location).attr("href", "index.html");
 };
